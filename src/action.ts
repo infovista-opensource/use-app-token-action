@@ -33,18 +33,17 @@ export async function cleanup() {
   try {
     const clean = core.getBooleanInput('clean')
     const saveToSecret = core.getBooleanInput('secret')
-    const token = core.getState('token');
+    const token = core.getState('token')
     if (clean) {
       if (saveToSecret) {
-        const { token } = await util.getAppInfo()
         const appSlugName = util.getAppSlugName()
         const appTokenName = util.getAppTokenName()
         await util.deleteSecret(token, appSlugName)
         await util.deleteSecret(token, appTokenName)
         core.info(`Secrets "${appSlugName}" and "${appTokenName}" were removed`)
       }
-      await util.deleteToken(token);
-      core.info("Token revoked");
+      await util.deleteToken(token)
+      core.info('Token revoked')
     }
   } catch (e) {
     core.error(e)

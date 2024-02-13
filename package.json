@@ -10,7 +10,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "lint": "eslint 'src/**/*.{js,ts}?(x)' --fix",
-    "build": "ncc build src/index.ts --minify --v8-cache",
+    "build": "ncc build src/index.ts --minify --license licenses.txt",
     "prebuild": "run-s lint clean",
     "prepare": "is-ci || husky install .husky"
   },
@@ -30,21 +30,21 @@
   "contributors": [],
   "repository": "https://github.com/wow-actions/use-app-token",
   "dependencies": {
-    "@actions/core": "^1.10.0",
-    "@actions/github": "^5.1.1",
-    "@octokit/auth-app": "^4.0.7",
-    "@octokit/core": "^4.1.0",
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0",
+    "@octokit/auth-app": "^6.0.3",
+    "@octokit/core": "^5.1.0",
     "is-base64": "^1.1.0",
-    "libsodium-wrappers": "^0.7.10"
+    "libsodium-wrappers": "^0.7.13"
   },
   "devDependencies": {
     "@bubkoo/commitlint-config": "^1.0.1",
     "@bubkoo/eslint-config": "^1.2.0",
     "@bubkoo/tsconfig": "^1.0.0",
     "@types/is-base64": "^1.1.0",
-    "@types/libsodium-wrappers": "^0.7.10",
-    "@types/node": "^18.11.9",
-    "@vercel/ncc": "^0.34.0",
+    "@types/libsodium-wrappers": "^0.7.13",
+    "@types/node": "^20.7.0",
+    "@vercel/ncc": "^0.38.1",
     "eslint": "^8.28.0",
     "husky": "^8.0.2",
     "is-ci": "^3.0.1",

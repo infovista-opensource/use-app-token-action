@@ -1,5 +1,6 @@
 export declare function getAppSlugName(): string;
 export declare function getAppTokenName(): string;
+export declare function getOrganization(): string | undefined;
 export declare function getAppInfo(): Promise<{
     token: string;
     slug: string;

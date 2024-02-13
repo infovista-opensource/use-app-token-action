@@ -13,11 +13,17 @@ export function getAppTokenName() {
   return core.getInput('app_token_name') || 'BOT_TOKEN'
 }
 
+export function getOrganization() {
+  return core.getInput('target-organization') || process.env.GITHUB_OWNER
+}
+
 export async function getAppInfo() {
   const fallback = core.getInput('fallback')
   const required = fallback == null
   const appId = Number(core.getInput('app_id', { required }))
   const privateKeyInput = core.getInput('private_key', { required })
+  const targetOrg =
+    core.getInput('target-organization') || github.context.repo.owner
 
   if (appId == null || privateKeyInput == null) {
     return Promise.resolve({ token: fallback, slug: '' })
@@ -37,8 +43,8 @@ export async function getAppInfo() {
 
   // 2. Get installationId of the app
   const octokit = github.getOctokit(jwt)
-  const install = await octokit.rest.apps.getRepoInstallation({
-    ...github.context.repo,
+  const install = await octokit.rest.apps.getOrgInstallation({
+    org: targetOrg,
   })
 
   // 3. Retrieve installation access token
@@ -108,7 +114,5 @@ export async function deleteSecret(token: string, secretName: string) {
 
 export async function deleteToken(token: string) {
   const octokit = new Octokit({ auth: token })
-  await octokit.request(
-    'DELETE /installation/token',
-  )
+  await octokit.request('DELETE /installation/token')
 }

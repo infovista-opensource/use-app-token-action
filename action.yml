@@ -23,6 +23,9 @@ inputs:
     description: Specify true to save app token and app slug into the secrets of current repository.
     required: false
     default: false
+  target-organization:
+    description: The organization to get the installation token about
+    required: false
   clean:
     description: Specify true to clean saved secrets when workflow run completed.
     required: false
