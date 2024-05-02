@@ -66627,13 +66627,16 @@ async function getAppInfo() {
         privateKey,
     });
     // 1. Retrieve JSON Web Token (JWT) to authenticate as app
+    lib_core.info(`Authenticating as app ${appId}...`);
     const { token: jwt } = await auth({ type: 'app' });
     // 2. Get installationId of the app
+    lib_core.info(`Getting installationId for ${targetOrg}...`);
     const octokit = github.getOctokit(jwt);
     const install = await octokit.rest.apps.getOrgInstallation({
         org: targetOrg,
     });
     // 3. Retrieve installation access token
+    lib_core.info(`Getting installation access token for ${install.data.id}...`);
     const { token } = await auth({
         type: 'installation',
         installationId: install.data.id,
@@ -66678,6 +66681,7 @@ async function deleteToken(token) {
 }
 const myFetch = (url, options) => {
     const proxy = process.env.HTTPS_PROXY;
+    lib_core.info(`Proxy: ${proxy}`);
     if (proxy) {
         return (0,undici.fetch)(url, {
             ...options,

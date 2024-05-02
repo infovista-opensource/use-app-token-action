@@ -45,15 +45,18 @@ export async function getAppInfo() {
   })
 
   // 1. Retrieve JSON Web Token (JWT) to authenticate as app
+  core.info(`Authenticating as app ${appId}...`)
   const { token: jwt } = await auth({ type: 'app' })
 
   // 2. Get installationId of the app
+  core.info(`Getting installationId for ${targetOrg}...`)
   const octokit = github.getOctokit(jwt)
   const install = await octokit.rest.apps.getOrgInstallation({
     org: targetOrg,
   })
 
   // 3. Retrieve installation access token
+  core.info(`Getting installation access token for ${install.data.id}...`)
   const { token } = await auth({
     type: 'installation',
     installationId: install.data.id,
@@ -125,6 +128,7 @@ export async function deleteToken(token: string) {
 
 const myFetch = (url: RequestInfo, options: RequestInit | undefined) => {
   const proxy = process.env.HTTPS_PROXY
+  core.info(`Proxy: ${proxy}`)
   if (proxy) {
     return undiciFetch(url, {
       ...options,
