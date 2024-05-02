@@ -4,6 +4,12 @@ import isBase64 from 'is-base64'
 import sodium from 'libsodium-wrappers'
 import { Octokit } from '@octokit/core'
 import { createAppAuth } from '@octokit/auth-app'
+import {
+  fetch as undiciFetch,
+  ProxyAgent,
+  RequestInfo,
+  RequestInit,
+} from 'undici'
 
 export function getAppSlugName() {
   return core.getInput('app_slug_name') || 'BOT_NAME'
@@ -89,7 +95,7 @@ export async function createSecret(
   secretName: string,
   secretValue: string,
 ) {
-  const octokit = new Octokit({ auth: token })
+  const octokit = new Octokit({ auth: token, request: { fetch: myFetch } })
   const secret = await makeSecret(octokit, secretValue)
   await octokit.request(
     'PUT /repos/:owner/:repo/actions/secrets/:secret_name',
@@ -102,7 +108,7 @@ export async function createSecret(
 }
 
 export async function deleteSecret(token: string, secretName: string) {
-  const octokit = new Octokit({ auth: token })
+  const octokit = new Octokit({ auth: token, request: { fetch: myFetch } })
   await octokit.request(
     'DELETE /repos/:owner/:repo/actions/secrets/:secret_name',
     {
@@ -113,6 +119,19 @@ export async function deleteSecret(token: string, secretName: string) {
 }
 
 export async function deleteToken(token: string) {
-  const octokit = new Octokit({ auth: token })
+  const octokit = new Octokit({ auth: token, request: { fetch: myFetch } })
   await octokit.request('DELETE /installation/token')
+}
+
+const myFetch = (url: RequestInfo, options: RequestInit | undefined) => {
+  const proxy = process.env.HTTPS_PROXY
+  if (proxy) {
+    return undiciFetch(url, {
+      ...options,
+      dispatcher: new ProxyAgent(proxy),
+    })
+  }
+  return undiciFetch(url, {
+    ...options,
+  })
 }
