@@ -42,7 +42,7 @@ export async function getAppInfo() {
 
   // 2. Get installationId of the app
   core.info(`Getting installationId for ${targetOrg}...`)
-  const octokit = github.getOctokit(jwt)
+  const octokit = github.getOctokit(jwt, { proxy: process.env.HTTPS_PROXY })
   const install = await octokit.rest.apps.getOrgInstallation({
     org: targetOrg,
   })
@@ -94,7 +94,10 @@ export async function createSecret(
   let octokit: Octokit
   if (proxy) {
     core.info(`Using proxy: ${proxy}`)
-    octokit = new Octokit({ auth: token, agent: new HttpsProxyAgent(proxy) })
+    octokit = new Octokit({
+      auth: token,
+      request: { agent: new HttpsProxyAgent(proxy) },
+    })
   } else {
     octokit = new Octokit({ auth: token })
   }
@@ -114,7 +117,10 @@ export async function deleteSecret(token: string, secretName: string) {
   let octokit: Octokit
   if (proxy) {
     core.info(`Using proxy: ${proxy}`)
-    octokit = new Octokit({ auth: token, agent: new HttpsProxyAgent(proxy) })
+    octokit = new Octokit({
+      auth: token,
+      request: { agent: new HttpsProxyAgent(proxy) },
+    })
   } else {
     octokit = new Octokit({ auth: token })
   }
@@ -133,7 +139,10 @@ export async function deleteToken(token: string) {
   let octokit: Octokit
   if (proxy) {
     core.info(`Using proxy: ${proxy}`)
-    octokit = new Octokit({ auth: token, agent: new HttpsProxyAgent(proxy) })
+    octokit = new Octokit({
+      auth: token,
+      request: { agent: new HttpsProxyAgent(proxy) },
+    })
   } else {
     octokit = new Octokit({ auth: token })
   }
