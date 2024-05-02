@@ -4,12 +4,7 @@ import isBase64 from 'is-base64'
 import sodium from 'libsodium-wrappers'
 import { Octokit } from '@octokit/core'
 import { createAppAuth } from '@octokit/auth-app'
-import {
-  fetch as undiciFetch,
-  ProxyAgent,
-  RequestInfo,
-  RequestInit,
-} from 'undici'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 
 export function getAppSlugName() {
   return core.getInput('app_slug_name') || 'BOT_NAME'
@@ -39,10 +34,7 @@ export async function getAppInfo() {
     ? Buffer.from(privateKeyInput, 'base64').toString('utf8')
     : privateKeyInput
 
-  const auth = createAppAuth({
-    appId,
-    privateKey,
-  })
+  const auth = createAppAuth({ appId, privateKey })
 
   // 1. Retrieve JSON Web Token (JWT) to authenticate as app
   core.info(`Authenticating as app ${appId}...`)
@@ -98,7 +90,14 @@ export async function createSecret(
   secretName: string,
   secretValue: string,
 ) {
-  const octokit = new Octokit({ auth: token, request: { fetch: myFetch } })
+  const proxy = process.env.HTTPS_PROXY
+  let octokit: Octokit
+  if (proxy) {
+    core.info(`Using proxy: ${proxy}`)
+    octokit = new Octokit({ auth: token, agent: new HttpsProxyAgent(proxy) })
+  } else {
+    octokit = new Octokit({ auth: token })
+  }
   const secret = await makeSecret(octokit, secretValue)
   await octokit.request(
     'PUT /repos/:owner/:repo/actions/secrets/:secret_name',
@@ -111,7 +110,15 @@ export async function createSecret(
 }
 
 export async function deleteSecret(token: string, secretName: string) {
-  const octokit = new Octokit({ auth: token, request: { fetch: myFetch } })
+  const proxy = process.env.HTTPS_PROXY
+  let octokit: Octokit
+  if (proxy) {
+    core.info(`Using proxy: ${proxy}`)
+    octokit = new Octokit({ auth: token, agent: new HttpsProxyAgent(proxy) })
+  } else {
+    octokit = new Octokit({ auth: token })
+  }
+
   await octokit.request(
     'DELETE /repos/:owner/:repo/actions/secrets/:secret_name',
     {
@@ -122,20 +129,14 @@ export async function deleteSecret(token: string, secretName: string) {
 }
 
 export async function deleteToken(token: string) {
-  const octokit = new Octokit({ auth: token, request: { fetch: myFetch } })
-  await octokit.request('DELETE /installation/token')
-}
-
-const myFetch = (url: RequestInfo, options: RequestInit | undefined) => {
   const proxy = process.env.HTTPS_PROXY
-  core.info(`Proxy: ${proxy}`)
+  let octokit: Octokit
   if (proxy) {
-    return undiciFetch(url, {
-      ...options,
-      dispatcher: new ProxyAgent(proxy),
-    })
+    core.info(`Using proxy: ${proxy}`)
+    octokit = new Octokit({ auth: token, agent: new HttpsProxyAgent(proxy) })
+  } else {
+    octokit = new Octokit({ auth: token })
   }
-  return undiciFetch(url, {
-    ...options,
-  })
+
+  await octokit.request('DELETE /installation/token')
 }
