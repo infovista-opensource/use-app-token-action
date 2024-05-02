@@ -10,7 +10,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "lint": "eslint 'src/**/*.{js,ts}?(x)' --fix",
-    "build": "ncc build src/index.ts --license licenses.txt",
+    "build": "ncc build src/index.ts --minify --license licenses.txt",
     "prebuild": "run-s lint clean",
     "prepare": "is-ci || husky install .husky"
   },
