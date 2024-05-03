@@ -121,6 +121,7 @@ export async function deleteSecret(token: string, secretName: string) {
 }
 
 export async function deleteToken(token: string) {
+  core.info(`deleting token ${token}`)
   const octokit = createOctokit(token)
   await octokit.request('DELETE /installation/token')
 }
