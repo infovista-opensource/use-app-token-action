@@ -4,7 +4,8 @@ import isBase64 from 'is-base64'
 import sodium from 'libsodium-wrappers'
 import { Octokit } from '@octokit/core'
 import { createAppAuth } from '@octokit/auth-app'
-import { ProxyAgent } from 'proxy-agent'
+// import { ProxyAgent } from 'proxy-agent'
+// import { fetch as undiciFetch, ProxyAgent } from 'undici';
 
 export function getAppSlugName() {
   return core.getInput('app_slug_name') || 'BOT_NAME'
@@ -123,7 +124,7 @@ export async function deleteToken(token: string) {
   await octokit.request('DELETE /installation/token')
 }
 
-function createOctokit(token: string) {
+function createOctokit(token: string): any {
   // const proxy = process.env.HTTPS_PROXY
   // if (proxy) {
   //   core.info(`Using proxy: ${proxy}`)
@@ -141,10 +142,5 @@ function createOctokit(token: string) {
   //   })
   // }
   // return new Octokit({ auth: token })
-  return new Octokit({
-    token,
-    request: {
-      agent: new ProxyAgent(),
-    },
-  })
+  return github.getOctokit(token, { proxy: process.env.HTTPS_PROXY })
 }
