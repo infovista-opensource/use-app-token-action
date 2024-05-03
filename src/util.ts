@@ -4,7 +4,7 @@ import isBase64 from 'is-base64'
 import sodium from 'libsodium-wrappers'
 import { Octokit } from '@octokit/core'
 import { createAppAuth } from '@octokit/auth-app'
-import { HttpsProxyAgent } from 'https-proxy-agent'
+import { ProxyAgent, fetch as undiciFetch } from 'undici'
 
 export function getAppSlugName() {
   return core.getInput('app_slug_name') || 'BOT_NAME'
@@ -92,17 +92,7 @@ export async function createSecret(
   secretName: string,
   secretValue: string,
 ) {
-  const proxy = process.env.HTTPS_PROXY
-  let octokit: Octokit
-  if (proxy) {
-    core.info(`Using proxy: ${proxy}`)
-    octokit = new Octokit({
-      auth: token,
-      request: { agent: new HttpsProxyAgent(proxy) },
-    })
-  } else {
-    octokit = new Octokit({ auth: token })
-  }
+  const octokit = createOctokit(token)
   const secret = await makeSecret(octokit, secretValue)
   await octokit.request(
     'PUT /repos/:owner/:repo/actions/secrets/:secret_name',
@@ -115,18 +105,7 @@ export async function createSecret(
 }
 
 export async function deleteSecret(token: string, secretName: string) {
-  const proxy = process.env.HTTPS_PROXY
-  let octokit: Octokit
-  if (proxy) {
-    core.info(`Using proxy: ${proxy}`)
-    octokit = new Octokit({
-      auth: token,
-      request: { agent: new HttpsProxyAgent(proxy) },
-    })
-  } else {
-    octokit = new Octokit({ auth: token })
-  }
-
+  const octokit = createOctokit(token)
   await octokit.request(
     'DELETE /repos/:owner/:repo/actions/secrets/:secret_name',
     {
@@ -137,16 +116,26 @@ export async function deleteSecret(token: string, secretName: string) {
 }
 
 export async function deleteToken(token: string) {
+  const octokit = createOctokit(token)
+  await octokit.request('DELETE /installation/token')
+}
+
+function createOctokit(token: string) {
   const proxy = process.env.HTTPS_PROXY
-  let octokit: Octokit
   if (proxy) {
     core.info(`Using proxy: ${proxy}`)
-    octokit = new Octokit({
+    const myFetch: typeof undiciFetch = (url, opts) => {
+      return undiciFetch(url, {
+        ...opts,
+        dispatcher: new ProxyAgent({
+          uri: proxy,
+        }),
+      })
+    }
+    return new Octokit({
       auth: token,
-      request: { agent: new HttpsProxyAgent(proxy) },
+      request: { fetch: myFetch },
     })
-  } else {
-    octokit = new Octokit({ auth: token })
   }
-  await octokit.request('DELETE /installation/token')
+  return new Octokit({ auth: token })
 }
