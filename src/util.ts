@@ -4,7 +4,7 @@ import isBase64 from 'is-base64'
 import sodium from 'libsodium-wrappers'
 import { Octokit } from '@octokit/core'
 import { createAppAuth } from '@octokit/auth-app'
-import { ProxyAgent, fetch as undiciFetch } from 'undici'
+import { ProxyAgent } from 'proxy-agent'
 
 export function getAppSlugName() {
   return core.getInput('app_slug_name') || 'BOT_NAME'
@@ -121,21 +121,27 @@ export async function deleteToken(token: string) {
 }
 
 function createOctokit(token: string) {
-  const proxy = process.env.HTTPS_PROXY
-  if (proxy) {
-    core.info(`Using proxy: ${proxy}`)
-    const myFetch: typeof undiciFetch = (url, opts) => {
-      return undiciFetch(url, {
-        ...opts,
-        dispatcher: new ProxyAgent({
-          uri: proxy,
-        }),
-      })
-    }
-    return new Octokit({
-      auth: token,
-      request: { fetch: myFetch },
-    })
-  }
-  return new Octokit({ auth: token })
+  // const proxy = process.env.HTTPS_PROXY
+  // if (proxy) {
+  //   core.info(`Using proxy: ${proxy}`)
+  //   const myFetch: typeof undiciFetch = (url, opts) => {
+  //     return undiciFetch(url, {
+  //       ...opts,
+  //       dispatcher: new ProxyAgent({
+  //         uri: proxy,
+  //       }),
+  //     })
+  //   }
+  //   return new Octokit({
+  //     auth: token,
+  //     request: { fetch: myFetch },
+  //   })
+  // }
+  // return new Octokit({ auth: token })
+  return new Octokit({
+    token,
+    request: {
+      agent: new ProxyAgent(),
+    },
+  })
 }
