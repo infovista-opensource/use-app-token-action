@@ -59,6 +59,7 @@ export async function getAppInfo() {
       installation_id: install.data.id,
     },
   )
+  core.info('token created successfully')
   core.debug(JSON.stringify(data, null, 4))
   return { token: data.token, slug: install.data.app_slug }
 }
