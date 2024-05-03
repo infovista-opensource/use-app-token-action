@@ -48,12 +48,21 @@ export async function getAppInfo() {
   })
 
   // 3. Retrieve installation access token
-  core.info(`Getting installation access token for ${install.data.id}...`)
-  const { token } = await auth({
-    type: 'installation',
-    installationId: install.data.id,
-  })
-  return { token, slug: install.data.app_slug }
+  core.info(
+    `Getting installation access token for ${install.data.id}/${install.data.app_slug}...`,
+  )
+  const { data } = await octokit.request(
+    `POST ${install.data.access_tokens_url}`,
+    {
+      installation_id: install.data.id,
+    },
+  )
+  return { token: data.token, slug: install.data.app_slug }
+  // const { token } = await auth({
+  //   type: 'installation',
+  //   installationId: install.data.id,
+  // })
+  // return { token, slug: install.data.app_slug }
 }
 
 async function makeSecret(octokit: Octokit, value: string) {

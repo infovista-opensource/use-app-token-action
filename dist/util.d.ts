@@ -2,7 +2,7 @@ export declare function getAppSlugName(): string;
 export declare function getAppTokenName(): string;
 export declare function getOrganization(): string | undefined;
 export declare function getAppInfo(): Promise<{
-    token: string;
+    token: any;
     slug: string;
 }>;
 export declare function createSecret(token: string, secretName: string, secretValue: string): Promise<void>;
