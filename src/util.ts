@@ -1,11 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import isBase64 from 'is-base64'
-import sodium from 'libsodium-wrappers'
-import { Octokit } from '@octokit/core'
 import { createAppAuth } from '@octokit/auth-app'
-// import { ProxyAgent } from 'proxy-agent'
-// import { fetch as undiciFetch, ProxyAgent } from 'undici';
 
 export function getAppSlugName() {
   return core.getInput('app_slug_name') || 'BOT_NAME'
@@ -43,11 +39,11 @@ export async function getAppInfo() {
 
   // 2. Get installationId of the app
   core.info(`Getting installationId for ${targetOrg}...`)
-  const octokit = github.getOctokit(jwt, { proxy: process.env.HTTPS_PROXY })
+  const octokit = createOctokit(jwt)
   const install = await octokit.rest.apps.getOrgInstallation({
     org: targetOrg,
   })
-  core.info(JSON.stringify(install, null, 4))
+  core.debug(JSON.stringify(install, null, 4))
 
   // 3. Retrieve installation access token
   core.info(
@@ -64,62 +60,6 @@ export async function getAppInfo() {
   return { token: data.token, slug: install.data.app_slug }
 }
 
-async function makeSecret(octokit: Octokit, value: string) {
-  const { repo } = github.context
-  const res = await octokit.request(
-    'GET /repos/:owner/:repo/actions/secrets/public-key',
-    repo,
-  )
-
-  const { key } = res.data
-
-  await sodium.ready
-
-  // Convert Secret & Base64 key to Uint8Array.
-  const binkey = sodium.from_base64(key, sodium.base64_variants.ORIGINAL)
-  const binsec = sodium.from_string(value)
-
-  // Encrypt the secret using LibSodium
-  const encryptedBytes = sodium.crypto_box_seal(binsec, binkey)
-
-  return {
-    key_id: res.data.key_id,
-    // Base64 the encrypted secret
-    encrypted_value: sodium.to_base64(
-      encryptedBytes,
-      sodium.base64_variants.ORIGINAL,
-    ),
-  }
-}
-
-export async function createSecret(
-  token: string,
-  secretName: string,
-  secretValue: string,
-) {
-  const octokit = createOctokit(token)
-  const secret = await makeSecret(octokit, secretValue)
-  await octokit.request(
-    'PUT /repos/:owner/:repo/actions/secrets/:secret_name',
-    {
-      ...github.context.repo,
-      secret_name: secretName,
-      data: secret,
-    },
-  )
-}
-
-export async function deleteSecret(token: string, secretName: string) {
-  const octokit = createOctokit(token)
-  await octokit.request(
-    'DELETE /repos/:owner/:repo/actions/secrets/:secret_name',
-    {
-      ...github.context.repo,
-      secret_name: secretName,
-    },
-  )
-}
-
 export async function deleteToken(token: string) {
   core.info(`deleting token ${token}`)
   const octokit = createOctokit(token)
@@ -127,22 +67,5 @@ export async function deleteToken(token: string) {
 }
 
 function createOctokit(token: string): any {
-  // const proxy = process.env.HTTPS_PROXY
-  // if (proxy) {
-  //   core.info(`Using proxy: ${proxy}`)
-  //   const myFetch: typeof undiciFetch = (url, opts) => {
-  //     return undiciFetch(url, {
-  //       ...opts,
-  //       dispatcher: new ProxyAgent({
-  //         uri: proxy,
-  //       }),
-  //     })
-  //   }
-  //   return new Octokit({
-  //     auth: token,
-  //     request: { fetch: myFetch },
-  //   })
-  // }
-  // return new Octokit({ auth: token })
   return github.getOctokit(token, { proxy: process.env.HTTPS_PROXY })
 }

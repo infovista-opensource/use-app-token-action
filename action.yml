@@ -20,7 +20,7 @@ inputs:
     required: false
     default: BOT_TOKEN
   secret:
-    description: Specify true to save app token and app slug into the secrets of current repository.
+    description: "UNUSED: Specify true to save app token and app slug into the secrets of current repository."
     required: false
     default: false
   target-organization:
