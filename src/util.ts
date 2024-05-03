@@ -4,7 +4,7 @@ import isBase64 from 'is-base64'
 import sodium from 'libsodium-wrappers'
 import { Octokit } from '@octokit/core'
 import { createAppAuth } from '@octokit/auth-app'
-// import { HttpsProxyAgent } from 'https-proxy-agent'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 
 export function getAppSlugName() {
   return core.getInput('app_slug_name') || 'BOT_NAME'
@@ -98,7 +98,7 @@ export async function createSecret(
     core.info(`Using proxy: ${proxy}`)
     octokit = new Octokit({
       auth: token,
-      proxy: process.env.HTTPS_PROXY,
+      request: { agent: new HttpsProxyAgent(proxy) },
     })
   } else {
     octokit = new Octokit({ auth: token })
@@ -121,7 +121,7 @@ export async function deleteSecret(token: string, secretName: string) {
     core.info(`Using proxy: ${proxy}`)
     octokit = new Octokit({
       auth: token,
-      proxy: process.env.HTTPS_PROXY,
+      request: { agent: new HttpsProxyAgent(proxy) },
     })
   } else {
     octokit = new Octokit({ auth: token })
@@ -143,11 +143,10 @@ export async function deleteToken(token: string) {
     core.info(`Using proxy: ${proxy}`)
     octokit = new Octokit({
       auth: token,
-      proxy: process.env.HTTPS_PROXY,
+      request: { agent: new HttpsProxyAgent(proxy) },
     })
   } else {
     octokit = new Octokit({ auth: token })
   }
-
   await octokit.request('DELETE /installation/token')
 }
