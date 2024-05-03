@@ -57,7 +57,7 @@ export async function getAppInfo() {
       installation_id: install.data.id,
     },
   )
-  core.info(data)
+  core.info(JSON.stringify(data, null, 4))
   return { token: data.token, slug: install.data.app_slug }
   // const { token } = await auth({
   //   type: 'installation',
